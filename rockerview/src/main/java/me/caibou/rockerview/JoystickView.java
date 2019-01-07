@@ -33,7 +33,6 @@ public class JoystickView extends RockerView {
 
     private Region ballRegion, invalidRegion;//触摸球可移动有效区域、 操作无效区域(在此范围方向无效，超出此范围的方向才有效)
 
-    private Paint paint = new Paint();
     private Point center;
 
     private int edgeRadius, stickRadius, dr;//背景圆半径、触摸球半径、外径距离（两圆距离差）
@@ -73,12 +72,13 @@ public class JoystickView extends RockerView {
     private void initialData() {
         //add 背景、触摸球图片资源
         Bitmap tmpBgBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_left_pad);
-        Bitmap tmpTouchBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_control_ball);
         mBgBmp = Bitmap.createScaledBitmap(tmpBgBmp, edgeRadius * 2, edgeRadius * 2, true);
+        Bitmap tmpTouchBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_control_ball);
         mTouchBmp = Bitmap.createScaledBitmap(tmpTouchBmp, stickRadius * 2, stickRadius * 2, true);
+
         if (isShowDirectionBmp) {
             Bitmap tmpDirectionBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_arrow);
-            mDirectionBmp = Bitmap.createScaledBitmap(tmpDirectionBmp, (int) edgeRadius * 2, (int) edgeRadius * 2, true);
+            mDirectionBmp = Bitmap.createScaledBitmap(tmpDirectionBmp, mViewSize,  mViewSize, true);
         }
 
         //背景和触摸球间距
@@ -125,8 +125,8 @@ public class JoystickView extends RockerView {
     protected void onDraw(Canvas canvas) {
         Log.i(TAG, "onDraw()");
         canvas.drawColor(Color.TRANSPARENT);
-        drawRockerEdge(canvas);//背景
-        drawStickBall(canvas);//触摸球
+        canvas.drawBitmap(mBgBmp, mPadding, mPadding, null);//图片//背景
+        canvas.drawBitmap(mTouchBmp, stickX - mTouchBmp.getWidth() / 2, stickY - mTouchBmp.getWidth() / 2, null);//图片//触摸球
         if (isShowDirectionBmp && center.x != stickX && center.y != stickY) {
             drawRotateBitmap(canvas, mDirectionBmp, (float) currentAngle + 180, 0, 0);
         }
@@ -146,35 +146,8 @@ public class JoystickView extends RockerView {
         int offsetY = bitmap.getHeight() / 2;
         matrix.postTranslate(-offsetX, -offsetY);
         matrix.postRotate(rotation);
-        matrix.postTranslate(posX + offsetX, posY + offsetY);
+        matrix.postTranslate(offsetX, offsetY);
         canvas.drawBitmap(bitmap, matrix, null);
-    }
-
-    /**
-     * 绘制背景
-     *
-     * @param canvas
-     */
-    protected void drawRockerEdge(Canvas canvas) {
-//        paint.reset();
-//        paint.setColor(Color.BLACK);
-//        paint.setStyle(Paint.Style.STROKE);
-//        paint.setStrokeWidth(2.0f);
-//        canvas.drawCircle(center.x, center.y, edgeRadius, paint);//tip 画笔
-        canvas.drawBitmap(mBgBmp, 0, 0, null);//图片
-    }
-
-    /**
-     * 绘制触摸球
-     *
-     * @param canvas
-     */
-    protected void drawStickBall(Canvas canvas) {
-//        paint.reset();
-//        paint.setColor(stickBallColor);
-//        paint.setStyle(Paint.Style.FILL);
-//        canvas.drawCircle(stickX, stickY, stickRadius, paint);//tip 画笔
-        canvas.drawBitmap(mTouchBmp, stickX - mTouchBmp.getWidth() / 2 , stickY - mTouchBmp.getWidth() / 2 , null);//图片
     }
 
     /**

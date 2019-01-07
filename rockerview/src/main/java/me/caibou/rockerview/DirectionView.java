@@ -2,11 +2,14 @@ package me.caibou.rockerview;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.support.annotation.Nullable;
@@ -24,6 +27,11 @@ public class DirectionView extends RockerView {
         NONE, UP, DOWN, LEFT, RIGHT,
         UP_AND_LEFT, UP_AND_RIGHT, DOWN_AND_LEFT, DOWN_AND_RIGHT
     }
+
+    private Bitmap mBgBmp;
+    private Bitmap mArrowLeftNor, mArrowLeftPre, mArrowRightNor, mArrowRightPre,
+            mArrowUpNor, mArrowUpPre,mArrowDownNor, mArrowDownPre, mArrowLeft, mArrowRight, mArrowUp, mArrowDown;
+    private int mArrowSize;
 
     private Direction currentDirection;
 
@@ -51,7 +59,9 @@ public class DirectionView extends RockerView {
 
     public DirectionView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setBackgroundResource(R.color.color_default);
         initialAttr(context, attrs);
+        initialBitmap(context);
         initialData();
         resetInvalidRegion();
     }
@@ -65,9 +75,37 @@ public class DirectionView extends RockerView {
                 R.styleable.DirectionView_button_side_width, 120);
         indicatorColor = typedArray.getColor(R.styleable.DirectionView_indicator_color, Color.GREEN);
         typedArray.recycle();
+
+    }
+
+    private void initialBitmap(Context context) {
+        Bitmap tmpBgBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_left_pad);
+        mBgBmp = Bitmap.createScaledBitmap(tmpBgBmp, edgeRadius * 2, edgeRadius * 2, true);
+
+        mArrowSize = edgeRadius / 4 ;
+        Bitmap tempArrowLeftNor = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_left_nor);
+        Bitmap tempArrowLeftPre = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_left_pre);
+        Bitmap tempArrowUpNor = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_up_nor);
+        Bitmap tempArrowUpPre = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_up_pre);
+        Bitmap tempArrowRightNor = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_right_nor);
+        Bitmap tempArrowRightPre = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_right_pre);
+        Bitmap tempArrowDownNor = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_down_nor);
+        Bitmap tempArrowDownPre = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_direction_down_pre);
+
+        mArrowLeftNor = Bitmap.createScaledBitmap(tempArrowLeftNor, mArrowSize, mArrowSize, true);
+        mArrowLeftPre = Bitmap.createScaledBitmap(tempArrowLeftPre, mArrowSize, mArrowSize, true);
+        mArrowUpNor = Bitmap.createScaledBitmap(tempArrowUpNor, mArrowSize, mArrowSize, true);
+        mArrowUpPre = Bitmap.createScaledBitmap(tempArrowUpPre, mArrowSize, mArrowSize, true);
+        mArrowRightNor = Bitmap.createScaledBitmap(tempArrowRightNor, mArrowSize, mArrowSize, true);
+        mArrowRightPre = Bitmap.createScaledBitmap(tempArrowRightPre, mArrowSize, mArrowSize, true);
+        mArrowDownNor = Bitmap.createScaledBitmap(tempArrowDownNor, mArrowSize, mArrowSize, true);
+        mArrowDownPre = Bitmap.createScaledBitmap(tempArrowDownPre, mArrowSize, mArrowSize, true);
+
+        resetDirection();
     }
 
     private void initialData() {
+
         int sideLengthOfCenter = (int) Math.sqrt(Math.pow(buttonRadius, 2)
                 - Math.pow(sideWidth / 2, 2));
         int sideLength = sideLengthOfCenter - sideWidth / 2;
@@ -111,25 +149,42 @@ public class DirectionView extends RockerView {
     protected void onDraw(Canvas canvas) {
         drawEdge(canvas);
         drawDirectButton(canvas);
-        if (pressedStatus) {
-            drawIndicator(canvas);
-        }
     }
 
     protected void drawEdge(Canvas canvas) {
-        paint.reset();
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.BLACK);
-        canvas.drawCircle(centerPoint.x, centerPoint.y, edgeRadius, paint);
+        canvas.drawBitmap(mBgBmp, mPadding, mPadding, null);//图片//背景
     }
 
     protected void drawDirectButton(Canvas canvas) {
-        paint.reset();
-        paint.setColor(Color.WHITE);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(5);
-        paint.setAntiAlias(true);
-        canvas.drawPath(directPath, paint);
+        //朝上箭头
+        canvas.drawBitmap(mArrowUp,null, new Rect(
+                centerPoint.x - mArrowSize,
+                mPadding * 2 - mArrowSize,
+                centerPoint.x + mArrowSize ,
+                mPadding * 2 + mArrowSize
+        ),null);
+
+        canvas.drawBitmap(mArrowDown,null, new Rect(
+                centerPoint.x - mArrowSize,
+                mViewSize - mPadding * 2 - mArrowSize,
+                centerPoint.x + mArrowSize ,
+                mViewSize - mPadding * 2 + mArrowSize
+        ),null);
+
+        canvas.drawBitmap(mArrowLeft,null, new Rect(
+                mPadding * 2 - mArrowSize,
+                centerPoint.y  - mArrowSize ,
+                mPadding * 2 + mArrowSize,
+                centerPoint.y + mArrowSize
+        ),null);
+
+        canvas.drawBitmap(mArrowRight,null, new Rect(
+                mViewSize - mPadding * 2 - mArrowSize,
+                centerPoint.y  - mArrowSize ,
+                mViewSize - mPadding * 2 + mArrowSize,
+                centerPoint.y + mArrowSize
+        ),null);
+
     }
 
     protected void drawIndicator(Canvas canvas) {
@@ -139,6 +194,7 @@ public class DirectionView extends RockerView {
         paint.setStrokeWidth(20);
         canvas.drawArc(indicatorRect, startAngle, INDICATOR_SWEEP_ANGLE, false, paint);
     }
+
 
     @Override
     protected void actionDown(float x, float y, double angle) {
@@ -163,36 +219,57 @@ public class DirectionView extends RockerView {
 
     private void resetIndicator() {
         pressedStatus = false;
+        resetDirection();
         invalidate();
     }
 
     private void updateIndicator(double angle) {
+        resetDirection();
         if (Utils.range(angle, 337.5, 360) || Utils.range(angle, 0, 22.5)) {
             startAngle = 315.0f;
+            mArrowRight = mArrowRightPre;
             notifyDirection(Direction.RIGHT);
         } else if (Utils.range(angle, 22.5, 67.5)) {
             startAngle = 0.0f;
+            mArrowRight = mArrowRightPre;
+            mArrowDown = mArrowDownPre;
             notifyDirection(Direction.DOWN_AND_RIGHT);
         } else if (Utils.range(angle, 67.5, 112.5)) {
             startAngle = 45.0f;
+            mArrowDown = mArrowDownPre;
             notifyDirection(Direction.DOWN);
         } else if (Utils.range(angle, 112.5, 157.5)) {
             startAngle = 90.0f;
+            mArrowLeft = mArrowLeftPre;
+            mArrowDown = mArrowDownPre;
             notifyDirection(Direction.DOWN_AND_LEFT);
         } else if (Utils.range(angle, 157.5, 202.5)) {
             startAngle = 135.0f;
+            mArrowLeft = mArrowLeftPre;
             notifyDirection(Direction.LEFT);
         } else if (Utils.range(angle, 202.5, 247.5)) {
             startAngle = 180.0f;
+            mArrowUp = mArrowUpPre;
+            mArrowLeft = mArrowLeftPre;
             notifyDirection(Direction.UP_AND_LEFT);
         } else if (Utils.range(angle, 247.5, 292.5)) {
             startAngle = 225.0f;
+            mArrowUp = mArrowUpPre;
             notifyDirection(Direction.UP);
         } else if (Utils.range(angle, 292.5, 337.5)) {
             startAngle = 270.0f;
+            mArrowUp = mArrowUpPre;
+            mArrowRight = mArrowRightPre;
             notifyDirection(Direction.UP_AND_RIGHT);
         }
         invalidate();
+    }
+
+    private void resetDirection() {
+        mArrowUp = mArrowUpNor;
+        mArrowDown = mArrowDownNor;
+        mArrowLeft = mArrowLeftNor;
+        mArrowRight = mArrowRightNor;
     }
 
     private void notifyDirection(Direction direction) {

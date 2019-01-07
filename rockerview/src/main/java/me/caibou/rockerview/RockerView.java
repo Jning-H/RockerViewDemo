@@ -12,7 +12,10 @@ import android.view.View;
 
 /**
  * @author caibou
+ * TODO 定制数量、键位类型、大小、位置
+ * TODO 方向指针缩放跟控制盘的大小缩放比例不一致
  */
+
 public abstract class RockerView extends View {
 
     public static final int ACTION_DOWN = 1;
@@ -23,6 +26,8 @@ public abstract class RockerView extends View {
 
     private Point centerPoint = new Point();
     private int radius;//触摸范围半径 值越大触摸范围越大
+    public int mPadding;// 背景圆到Pad边界的px  一般是留给方向箭头的位置
+    public int mViewSize;//View的长宽
 
     public RockerView(Context context) {
         this(context, null);
@@ -44,15 +49,18 @@ public abstract class RockerView extends View {
         radius = typedArray.getDimensionPixelSize(R.styleable.RockerView_edge_radius, 200);
         typedArray.recycle();
 
-        centerPoint.x = radius;
-        centerPoint.y = radius;
+        mPadding = dip2px(context, 20);
+        mViewSize = (radius + mPadding) * 2;
+
+        centerPoint.x = centerPoint.y = mViewSize / 2;
     }
 
     //初始化触摸范围
     private void initialTouchRange() {
         Path edgeRulePath = new Path();
         edgeRulePath.addCircle(centerPoint.x, centerPoint.y, radius, Path.Direction.CW);
-        Region globalRegion = new Region(centerPoint.x - radius, centerPoint.y - radius,
+        Region globalRegion = new Region(
+                centerPoint.x - radius, centerPoint.y - radius,
                 centerPoint.x + radius, centerPoint.y + radius);
         edgeRegion.setPath(edgeRulePath, globalRegion);
     }
@@ -91,8 +99,19 @@ public abstract class RockerView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int sideLength = radius * 2;
+        int sideLength = mViewSize;
         setMeasuredDimension(sideLength, sideLength);
+    }
+
+    /**
+     * 根据手机分辨率从DP转成PX
+     * @param context
+     * @param dpValue
+     * @return
+     */
+    public static int dip2px(Context context, float dpValue) {
+        float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
     }
 
     /**

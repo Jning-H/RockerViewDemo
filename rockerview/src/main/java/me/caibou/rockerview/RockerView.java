@@ -15,14 +15,14 @@ import android.view.View;
  */
 public abstract class RockerView extends View {
 
-    public static final int ACTION_PRESSED = 1;
+    public static final int ACTION_DOWN = 1;
     public static final int ACTION_MOVE = 0;
     public static final int ACTION_RELEASE = -1;
 
-    private Region edgeRegion = new Region();
+    private Region edgeRegion = new Region();//边缘区域
 
     private Point centerPoint = new Point();
-    private int radius;
+    private int radius;//触摸范围半径 值越大触摸范围越大
 
     public RockerView(Context context) {
         this(context, null);
@@ -38,6 +38,7 @@ public abstract class RockerView extends View {
         initialTouchRange();
     }
 
+    //初始化圆心位置
     private void initializeData(Context context, @Nullable AttributeSet attrs) {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.RockerView);
         radius = typedArray.getDimensionPixelSize(R.styleable.RockerView_edge_radius, 200);
@@ -47,6 +48,7 @@ public abstract class RockerView extends View {
         centerPoint.y = radius;
     }
 
+    //初始化触摸范围
     private void initialTouchRange() {
         Path edgeRulePath = new Path();
         edgeRulePath.addCircle(centerPoint.x, centerPoint.y, radius, Path.Direction.CW);
@@ -55,7 +57,8 @@ public abstract class RockerView extends View {
         edgeRegion.setPath(edgeRulePath, globalRegion);
     }
 
-    private double calculateAngle(float dx, float dy) {
+    //计算角度
+    public double calculateAngle(float dx, float dy) {
         double degrees = Math.toDegrees(Math.atan2(dy, dx));
         return degrees < 0 ? Math.floor(degrees + 360) : degrees;
     }
@@ -84,6 +87,7 @@ public abstract class RockerView extends View {
         return super.onTouchEvent(event);
     }
 
+    //view面积
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);

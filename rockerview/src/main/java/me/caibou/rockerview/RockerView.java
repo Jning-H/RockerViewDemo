@@ -1,14 +1,13 @@
 package me.caibou.rockerview;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Region;
-import android.support.annotation.Nullable;
-import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
+import me.caibou.rockerview.bean.KeyModel;
 
 /**
  * @author caibou
@@ -22,46 +21,45 @@ public abstract class RockerView extends View {
     public static final int ACTION_MOVE = 0;
     public static final int ACTION_RELEASE = -1;
 
+    public boolean isShowDirectionBmp = false;
+    public int mViewWidth;//View的宽
+    public int mViewHeight;//View的高
+    public int mPadding;// 背景圆到Pad边界的px  一般是留给方向箭头的位置
+    public int mRadius;//触摸范围半径 值越大触摸范围越大
+
     private Region edgeRegion = new Region();//边缘区域
 
     private Point centerPoint = new Point();
-    private int radius;//触摸范围半径 值越大触摸范围越大
-    public int mPadding;// 背景圆到Pad边界的px  一般是留给方向箭头的位置
-    public int mViewSize;//View的长宽
+
 
     public RockerView(Context context) {
-        this(context, null);
-    }
-
-    public RockerView(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public RockerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        initializeData(context, attrs);
-        initialTouchRange();
+        super(context);
     }
 
     //初始化圆心位置
-    private void initializeData(Context context, @Nullable AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.RockerView);
-        radius = typedArray.getDimensionPixelSize(R.styleable.RockerView_edge_radius, 200);
-        typedArray.recycle();
+    protected RockerView init(KeyModel model) {
+        mViewWidth = model.getWidth();
+        mViewHeight = model.getHeight();
 
-        mPadding = dip2px(context, 20);
-        mViewSize = (radius + mPadding) * 2;
+        mPadding = model.getPadding();
+        mRadius = mViewWidth / 2 - mPadding;
 
-        centerPoint.x = centerPoint.y = mViewSize / 2;
+        isShowDirectionBmp = model.isShowDirection();
+
+        centerPoint.x = mViewWidth / 2;
+        centerPoint.y = mViewHeight / 2;
+
+        initialTouchRange();
+        return this;
     }
 
     //初始化触摸范围
     private void initialTouchRange() {
         Path edgeRulePath = new Path();
-        edgeRulePath.addCircle(centerPoint.x, centerPoint.y, radius, Path.Direction.CW);
+        edgeRulePath.addCircle(centerPoint.x, centerPoint.y, mRadius, Path.Direction.CW);
         Region globalRegion = new Region(
-                centerPoint.x - radius, centerPoint.y - radius,
-                centerPoint.x + radius, centerPoint.y + radius);
+                centerPoint.x - mRadius, centerPoint.y - mRadius,
+                centerPoint.x + mRadius, centerPoint.y + mRadius);
         edgeRegion.setPath(edgeRulePath, globalRegion);
     }
 
@@ -99,19 +97,7 @@ public abstract class RockerView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int sideLength = mViewSize;
-        setMeasuredDimension(sideLength, sideLength);
-    }
-
-    /**
-     * 根据手机分辨率从DP转成PX
-     * @param context
-     * @param dpValue
-     * @return
-     */
-    public static int dip2px(Context context, float dpValue) {
-        float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
+        setMeasuredDimension(mViewWidth, mViewHeight);
     }
 
     /**
@@ -119,7 +105,9 @@ public abstract class RockerView extends View {
      *
      * @return The center point of the circle
      */
-    public Point centerPoint() { return new Point(centerPoint); }
+    public Point centerPoint() {
+        return new Point(centerPoint);
+    }
 
     /**
      * Notify the View the current event information of the action down
@@ -129,7 +117,8 @@ public abstract class RockerView extends View {
      * @param angle The angle of the touch point relative to the center of the circle.
      *              represented by an double between 0 and 359.
      */
-    protected void actionDown(float x, float y, double angle) { }
+    protected void actionDown(float x, float y, double angle) {
+    }
 
     /**
      * Notify the View the current event information of the action move
@@ -139,7 +128,8 @@ public abstract class RockerView extends View {
      * @param angle The angle of the touch point relative to the center of the circle.
      *              represented by an double between 0 and 359.
      */
-    protected void actionMove(float x, float y, double angle) { }
+    protected void actionMove(float x, float y, double angle) {
+    }
 
     /**
      * Notify the View the current event information of the action up or cancel
@@ -149,6 +139,7 @@ public abstract class RockerView extends View {
      * @param angle The angle of the touch point relative to the center of the circle.
      *              represented by an double between 0 and 359.
      */
-    protected void actionUp(float x, float y, double angle) { }
+    protected void actionUp(float x, float y, double angle) {
+    }
 
 }

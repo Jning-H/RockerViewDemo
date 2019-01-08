@@ -2,19 +2,19 @@ package me.caibou.rockerview;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Region;
-import android.support.annotation.Nullable;
-import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+
+import me.caibou.rockerview.bean.KeyModel;
 
 /**
  * @author caibou
@@ -22,14 +22,11 @@ import android.util.Log;
 public class JoystickView extends RockerView {
 
     private static final String TAG = "JoystickView";
-    //add
     private Bitmap mBgBmp;        // 视图背景图片  假设是一个圆盘
     private Bitmap mTouchBmp;     // 视图中间的随手指移动的图片  假设是一个圆球
     private Bitmap mDirectionBmp;// 指示方向的图片  假设是一个箭头  整体是一个正方形的图片
     private ValueAnimator mValueAnimatorResetX;// 重置X动画
     private ValueAnimator mValueAnimatorResetY;// 重置Y动画
-    private boolean isShowDirectionBmp = true;
-//    private int mRoundBgPadding = 20;// 背景圆到view边界的像素
 
     private Region ballRegion, invalidRegion;//触摸球可移动有效区域、 操作无效区域(在此范围方向无效，超出此范围的方向才有效)
 
@@ -37,51 +34,43 @@ public class JoystickView extends RockerView {
 
     private int edgeRadius, stickRadius, dr;//背景圆半径、触摸球半径、外径距离（两圆距离差）
     private float stickX, stickY;
-    private int stickBallColor;
 
     private double currentAngle;//当前角度
 
     private OnAngleUpdateListener angleUpdateListener;//角度监听事件
 
     public JoystickView(Context context) {
-        this(context, null);
+        super(context);
     }
 
-    public JoystickView(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public JoystickView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        setBackgroundResource(R.color.color_default);
-        initialAttr(context, attrs);
+    public JoystickView init(KeyModel model) {
+        super.init(model);
+        setViewParams(model);
         initialData();
+        initialRes();
+        resetInvalidRegion();
+        return this;
     }
 
-    private void initialAttr(Context context, @Nullable AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.JoystickView);
-        edgeRadius = typedArray.getDimensionPixelSize(R.styleable.JoystickView_edge_radius, 200);
-        stickRadius = typedArray.getDimensionPixelSize(R.styleable.JoystickView_stick_radius, edgeRadius / 3);
-        stickBallColor = typedArray.getColor(R.styleable.JoystickView_stick_color, getResources().getColor(R.color.stick_default_color));
-        typedArray.recycle();
+    /**
+     * 设置布局参数
+     * @param model
+     */
+    private void setViewParams(KeyModel model) {
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.leftMargin = model.getCenterX();
+        lp.topMargin = model.getCenterY();
+        setLayoutParams(lp);
+        setBackgroundColor(Color.GRAY);
     }
 
     /**
      * 初始化摇杆数据
      */
     private void initialData() {
-        //add 背景、触摸球图片资源
-        Bitmap tmpBgBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_left_pad);
-        mBgBmp = Bitmap.createScaledBitmap(tmpBgBmp, edgeRadius * 2, edgeRadius * 2, true);
-        Bitmap tmpTouchBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_control_ball);
-        mTouchBmp = Bitmap.createScaledBitmap(tmpTouchBmp, stickRadius * 2, stickRadius * 2, true);
+        edgeRadius = mRadius;
+        stickRadius = edgeRadius / 3;
 
-        if (isShowDirectionBmp) {
-            Bitmap tmpDirectionBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_arrow);
-            mDirectionBmp = Bitmap.createScaledBitmap(tmpDirectionBmp, mViewSize,  mViewSize, true);
-        }
-
-        //背景和触摸球间距
         dr = edgeRadius - stickRadius;
 
         //初始位置
@@ -89,6 +78,28 @@ public class JoystickView extends RockerView {
         stickX = center.x;
         stickY = center.y;
 
+        currentAngle = -1;
+    }
+
+    /**
+     * 初始化背景、触摸球图片资源
+     */
+    private void initialRes() {
+        Bitmap tmpBgBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_left_pad);
+        mBgBmp = Bitmap.createScaledBitmap(tmpBgBmp, edgeRadius * 2, edgeRadius * 2, true);
+        Bitmap tmpTouchBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_control_ball);
+        mTouchBmp = Bitmap.createScaledBitmap(tmpTouchBmp, stickRadius * 2, stickRadius * 2, true);
+
+        if (isShowDirectionBmp) {
+            Bitmap tmpDirectionBmp = BitmapFactory.decodeResource(getResources(), R.mipmap.ui_pic_joystick_arrow);
+            mDirectionBmp = Bitmap.createScaledBitmap(tmpDirectionBmp, mViewWidth, mViewHeight, true);
+        }
+    }
+
+    /**
+     * 初始化触摸范围
+     */
+    private void resetInvalidRegion() {
         //触摸球可移动范围
         Region ballRegionClip = new Region(center.x - dr, center.y - dr,
                 center.x + dr, center.y + dr);
@@ -105,25 +116,10 @@ public class JoystickView extends RockerView {
         eventInvalidPath.addCircle(center.x, center.y, invalidRadius, Path.Direction.CW);
         invalidRegion = new Region();
         invalidRegion.setPath(eventInvalidPath, invalidRegionClip);
-
-        currentAngle = -1;
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        Log.i(TAG, "onMeasure()");
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        Log.i(TAG, "onLayout()");
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.i(TAG, "onDraw()");
         canvas.drawColor(Color.TRANSPARENT);
         canvas.drawBitmap(mBgBmp, mPadding, mPadding, null);//图片//背景
         canvas.drawBitmap(mTouchBmp, stickX - mTouchBmp.getWidth() / 2, stickY - mTouchBmp.getWidth() / 2, null);//图片//触摸球
@@ -172,20 +168,10 @@ public class JoystickView extends RockerView {
         invalidate();
     }
 
-    //TODO TouchView reset() Animation
-
     /**
-     * 重置触摸球
+     * 重置触摸球 动画
      */
     private void resetStick() {
-        Log.i(TAG, "resetStick()");
-        //tip 粗暴重置
-//        currentAngle = -1;
-//        stickX = center.x;
-//        stickY = center.y;
-//        invalidate();
-
-        //重置动画
         mValueAnimatorResetX = ValueAnimator.ofFloat(stickX, center.x).setDuration(200);
         mValueAnimatorResetX.start();
         mValueAnimatorResetX.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {

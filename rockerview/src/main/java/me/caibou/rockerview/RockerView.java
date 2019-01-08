@@ -11,8 +11,9 @@ import me.caibou.rockerview.bean.KeyModel;
 
 /**
  * @author caibou
- * TODO 定制数量、键位类型、大小、位置
- * TODO 方向指针缩放跟控制盘的大小缩放比例不一致
+ * TODO 【features】定制数量、键位类型、大小、位置(机型适配github：https://github.com/JessYanCoding/AndroidAutoSize)；
+ * TODO 【features】方向指针缩放跟控制盘的大小缩放比例不一致；  另：DirectionView还没有方向指针。
+ * TODO 【features】google android keyborad diy；
  */
 
 public abstract class RockerView extends View {

@@ -55,8 +55,8 @@ public class DirectionView extends RockerView {
 
     private void setViewParams(KeyModel model) {
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.leftMargin = model.getCenterX();
-        lp.topMargin = model.getCenterY();
+        lp.leftMargin = model.getCenterX() - mViewWidth/2;
+        lp.topMargin = model.getCenterY() - mViewHeight/2;
         setLayoutParams(lp);
         setBackgroundColor(Color.GRAY);
     }

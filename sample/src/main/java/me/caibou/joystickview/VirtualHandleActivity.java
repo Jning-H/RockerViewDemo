@@ -30,11 +30,11 @@ public class VirtualHandleActivity extends AppCompatActivity {
         //配置信息
         List<KeyModel> modelList = new ArrayList<>();
         for(int i = 0 ; i< 1 ; i++){
-            modelList.add(new KeyModel(300,300, 30,0,0,true));
+            modelList.add(new KeyModel(300,300, 30,300,300,true));
         }
 
         //TODO 方案一：check requestLayout() is work,if no,add invalidate();
-        new KeyContainerView(this).init(modelList).requestLayout();
+//        new KeyContainerView(this).init(modelList).requestLayout();
 
         //TODO 方案二：
         for(int i = 0 ; i< modelList.size() ; i++){
@@ -44,7 +44,7 @@ public class VirtualHandleActivity extends AppCompatActivity {
             layout.addView(view);
         }
 
-        RockerView view = new DirectionView(this).init(new KeyModel(300,300, 30,500,500,true));
+        RockerView view = new DirectionView(this).init(new KeyModel(300,300, 30,1000,600,true));
         layout.addView(view);
 
     }
